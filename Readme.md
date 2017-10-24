@@ -57,9 +57,9 @@ bin/spark-submit \
   local:///opt/spark/examples/jars/spark-examples_2.11-2.2.0-k8s-0.4.0.jar
 ```
 
-### Run terra-sort
+### Run terasort
 
-In this example we make use of the file staging server to upload our own jar file.
+In this example we make use of the file staging server to upload our own jar file. Terasort is compiled in the `./fetch_spark.sh` script.
 
 ```bash
 # Assuming you run on GKE:
