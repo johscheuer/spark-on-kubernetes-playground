@@ -2,7 +2,7 @@
 
 if ! gcloud container clusters describe big-data-demo > /dev/null;
 then
-    gcloud container clusters create --num-nodes=4 --machine-type=n1-standard-2 big-data-demo
+    gcloud container clusters create --num-nodes=4 --machine-type=n1-standard-4 big-data-demo
     gcloud container clusters get-credentials big-data-demo
 fi
 

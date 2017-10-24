@@ -21,7 +21,7 @@ Run `./install_hdfs` to install HDFS on your cluster. For futher information loo
 ### Example job
 
 ```bash
-cd cd repos/spark-2.2.0-k8s-0.4.0-bin-2.7.3/
+cd repos/spark-2.2.0-k8s-0.4.0-bin-2.7.3/
 
 export KUBE_MASTER=$(kubectl cluster-info | grep master | awk  '{print $6}' | tr -cd "[:print:]\n" | sed 's/\[0;33m//g;s/\[0m//g')
 bin/spark-submit \
@@ -80,8 +80,50 @@ bin/spark-submit \
   ../spark-terasort/target/spark-terasort-1.1-SNAPSHOT.jar 10G terasort-in-10G
 ```
 
+### Running PySpark
+
+```bash
+kubectl create ns pyspark
+
+bin/spark-submit \
+  --deploy-mode cluster \
+  --master k8s://$KUBE_MASTER  \
+  --kubernetes-namespace=pyspark \
+  --conf spark.executor.instances=5 \
+  --conf spark.app.name=spark-pi \
+  --conf spark.kubernetes.driver.docker.image=kubespark/spark-driver-py:v2.2.0-kubernetes-0.4.0 \
+  --conf spark.kubernetes.executor.docker.image=kubespark/spark-executor-py:v2.2.0-kubernetes-0.4.0 \
+  --jars local:///opt/spark/examples/jars/spark-examples_2.11-2.2.0-k8s-0.4.0.jar \
+  local:///opt/spark/examples/src/main/python/pi.py 10
+```
+
+### Dynamic Shuffeling
+
+Create the dynamic executors
+
+```bash
+kubectl apply -f  conf/kubernetes-shuffle-service.yaml
+```
+
+```bash
+bin/spark-submit \
+  --deploy-mode cluster \
+  --class org.apache.spark.examples.GroupByTest \
+  --master k8s://$KUBE_MASTER  \
+  --kubernetes-namespace default \
+  --conf spark.app.name=group-by-test \
+  --conf spark.kubernetes.driver.docker.image=kubespark/spark-driver:v2.2.0-kubernetes-0.4.0  \
+  --conf spark.kubernetes.executor.docker.image=kubespark/spark-executor:v2.2.0-kubernetes-0.4.0 \
+  --conf spark.dynamicAllocation.enabled=true \
+  --conf spark.shuffle.service.enabled=true \
+  --conf spark.kubernetes.shuffle.namespace=default \
+  --conf spark.kubernetes.shuffle.labels="app=spark-shuffle-service,spark-version=2.2.0" \
+  local:///opt/spark/examples/jars/spark-examples_2.11-2.2.0-k8s-0.4.0.jar 100 4000000 5
+```
+
 ## TODO
 
 - [ ] more examples
-- [ ] dynamic shuffeling
 - [ ] perf tests
+- [ ] Livy Server
+- [ ] Jupyter Server
